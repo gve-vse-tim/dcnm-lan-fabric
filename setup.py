@@ -20,7 +20,7 @@ setuptools.setup(
         "License :: Free To Use But Restricted",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.8', 
+    python_requires='>=3.8',
     install_requires=[
         'requests~=2.25.0',
         'click~=8.0.1',
