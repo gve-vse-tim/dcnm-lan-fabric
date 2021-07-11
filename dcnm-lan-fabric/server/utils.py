@@ -25,7 +25,7 @@ __license__ = "Cisco Sample Code License, Version 1.1"
 import os
 import json
 
-from dcnm_lan.server import session
+from dcnm_lan_fabric.server import session
 
 
 def connect(conn_fname, secure):

@@ -11,11 +11,11 @@ DCNM, environment variables.
 import sys
 import click
 
-from dcnm_lan.server import connect
-from dcnm_lan.actions.core import switch_data
-from dcnm_lan.actions.core import NoPoapSwitches
-from dcnm_lan.actions.core import poap_register_switch
-from dcnm_lan.actions.core import assign_switch_role
+from dcnm_lan_fabric.server import connect
+from dcnm_lan_fabric.actions.core import switch_data
+from dcnm_lan_fabric.actions.core import NoPoapSwitches
+from dcnm_lan_fabric.actions.core import poap_register_switch
+from dcnm_lan_fabric.actions.core import assign_switch_role
 
 
 # Commands for the switch module

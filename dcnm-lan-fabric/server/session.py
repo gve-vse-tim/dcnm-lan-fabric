@@ -27,7 +27,7 @@ import time
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-import dcnm_lan.api
+import dcnm_lan_fabric.api
 
 
 class session(requests.Session):
