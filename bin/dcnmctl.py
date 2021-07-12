@@ -4,10 +4,10 @@ import sys
 import click
 
 from dcnm_lan_fabric.server import session
-from dcnm_lab_fabric.cli.switch import switch
+from dcnm_lan_fabric.cli.switch import switch
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.option('--dcnm_host', 'dcnm_host', envvar='DCNM_HOST',
               help='IP or FQDN of DCNM server'
               )
