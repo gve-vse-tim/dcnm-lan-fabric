@@ -191,7 +191,6 @@ add.add_command(discover)
 switch.add_command(show)
 switch.add_command(add)
 switch.add_command(role)
-# switch.add_command(delete)
 
 if __name__ == '__main__':
     switch()
