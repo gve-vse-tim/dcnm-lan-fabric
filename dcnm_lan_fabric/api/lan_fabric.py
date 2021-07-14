@@ -88,3 +88,10 @@ class api:
         results = self.post(url, data=json_data)
 
         return results
+
+    # DCNM - Inventory
+    def get_switch_inventory(self):
+        url = '/inventory/switches'
+        results = self.get(url)
+
+        return results

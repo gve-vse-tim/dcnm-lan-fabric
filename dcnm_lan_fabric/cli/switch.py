@@ -16,7 +16,7 @@ from dcnm_lan_fabric.actions.core import switch_info
 from dcnm_lan_fabric.actions.core import NoPoapSwitches
 from dcnm_lan_fabric.actions.core import poap_register_switch
 from dcnm_lan_fabric.actions.core import assign_switch_role
-
+from dcnm_lan_fabric.actions.core import get_switch_list
 
 # Commands for the switch module
 @click.group()
@@ -39,6 +39,33 @@ def add(ctx):
         direct add of a single switch given that switch's mgmt0 IP address.
     """
     pass
+
+@click.command()
+@click.argument('fabric_name', required=False)
+@click.pass_context
+def show(ctx, fabric_name=None):
+    """
+    List switches in DCNM, optionally limited to the specified fabric
+
+    Usage: switch show [FABRIC]
+    """
+
+    # Create connection session from the context variables
+    conn = session(
+                   ctx.obj['dcnm_host'],
+                   ctx.obj['dcnm_user'],
+                   ctx.obj['dcnm_pass'],
+                   secure=ctx.obj['dcnm_verify']
+                  )
+
+    switches = get_switch_list(conn, fabric_name)
+
+    if len(switches) == 0:
+        return
+
+    print("Fabric\t\t\tSwitch Name\t\t\tManagement IP")
+    for sw in switches:
+        print(f"{sw['fabric']:20}\t{sw['name']:20}\t{sw['ip']:16}")
 
 
 # Add switches from POAP
@@ -161,6 +188,7 @@ def role(ctx, fabric_name, sw_name, sw_role, sw_user, sw_pass):
 add.add_command(poap)
 add.add_command(discover)
 
+switch.add_command(show)
 switch.add_command(add)
 switch.add_command(role)
 # switch.add_command(delete)

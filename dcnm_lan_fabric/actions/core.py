@@ -152,3 +152,23 @@ def assign_switch_role(conn, fabric_name, switch_role, switch):
         return results['successList'].split(',')
 
     return []
+
+
+def get_switch_list(conn, fabric_name):
+    api = conn.api()
+
+    devices = api.get_switch_inventory()
+
+    switches = [
+        {
+            'name': sw['logicalName'],
+            'ip': sw['ipAddress'],
+            'fabric': sw['fabricName']
+        }
+        for sw in devices
+        if (
+            fabric_name is None or sw['fabricName'] == fabric_name
+        )
+    ]
+
+    return switches
