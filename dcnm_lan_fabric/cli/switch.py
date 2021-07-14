@@ -11,7 +11,7 @@ DCNM, environment variables.
 import sys
 import click
 
-from dcnm_lan_fabric.server import connect
+from dcnm_lan_fabric.server import session
 from dcnm_lan_fabric.actions.core import switch_info
 from dcnm_lan_fabric.actions.core import NoPoapSwitches
 from dcnm_lan_fabric.actions.core import poap_register_switch
@@ -43,31 +43,29 @@ def add(ctx):
 
 # Add switches from POAP
 @click.command()
-@click.option('--sw_user', 'sw_user', envvars='SW_USER',
+@click.argument('fabric_name')
+@click.argument('sw_serial')
+@click.argument('sw_name')
+@click.argument('sw_ip')
+@click.option('--sw_user', 'sw_user', envvar='SW_USER',
               help='switch credentials username'
               )
-@click.option('--sw_pass', 'sw_pass', envvars='SW_PASS',
+@click.option('--sw_pass', 'sw_pass', envvar='SW_PASS',
               help='switch credentials password'
               )
-@click.argument('fabric_name', 
-              help='Fabric on which to add switch'
-              )
-@click.argument('sw_serial',
-              help='Switch serial number to identify switch'
-              )
-@click.argument('sw_name',
-              help='Switch name to assign the switch'
-              )
-@click.argument('sw_ip',
-              help='IP Address to assign the switch mgmt0 interface'
-              )
+@click.pass_context
 def poap(ctx, fabric_name, sw_serial, sw_name, sw_ip, sw_user, sw_pass):
     """
     Register switches in POAP phase to specified fabric with desired identity
     """
 
-    # Retrieve connection from the context
-    conn = ctx.obj['dcnm_connection']
+    # Create connection session from the context variables
+    conn = session(
+                   ctx.obj['dcnm_host'],
+                   ctx.obj['dcnm_user'],
+                   ctx.obj['dcnm_pass'],
+                   secure=ctx.obj['dcnm_verify']
+                  )
 
     # Create switch data object
     switch_data = switch_info(sw_serial, sw_name, sw_ip, sw_user, sw_pass, "")
@@ -84,29 +82,32 @@ def poap(ctx, fabric_name, sw_serial, sw_name, sw_ip, sw_user, sw_pass):
 
 
 @click.command()
-@click.option('--sw_user', 'sw_user', envvars='SW_USER',
+@click.argument('fabric_name')
+@click.argument('sw_ip')
+@click.option('--sw_user', 'sw_user', envvar='SW_USER',
               help='switch credentials username'
               )
-@click.option('--sw_pass', 'sw_pass', envvars='SW_PASS',
+@click.option('--sw_pass', 'sw_pass', envvar='SW_PASS',
               help='switch credentials password'
               )
-@click.argument('fabric_name', 
-              help='Fabric on which to add switch'
-              )
-@click.argument('sw_ip',
-              help='IP Address to assign the switch mgmt0 interface'
-              )
-@click.option('--cfg_erase', 'cfg_erase', envvars='CFG_ERASE',
+@click.option('--cfg_erase', 'cfg_erase', envvar='CFG_ERASE',
               is_flag=True, default=False,
               help='If used, switches will have configs erased.'
               )
+@click.pass_context
 def discover(ctx, fabric_name, sw_ip, sw_user, sw_pass, cfg_erase):
     """
-    Add switches to the fabric that have already
+    Add switches to the fabric that have already undergone the basic setup.
+    Requires a switch hostname, mgmt0 IP address, and admin credentials.
     """
 
-    # Retrieve connection from the context
-    conn = ctx.obj['dcnm_connection']
+    # Create connection session from the context variables
+    conn = session(
+                   ctx.obj['dcnm_host'],
+                   ctx.obj['dcnm_user'],
+                   ctx.obj['dcnm_pass'],
+                   secure=ctx.obj['dcnm_verify']
+                  )
 
     # If flag enabled, confirm configuration replacement
     if cfg_erase:
@@ -119,28 +120,30 @@ def discover(ctx, fabric_name, sw_ip, sw_user, sw_pass, cfg_erase):
 
 # Set switch role
 @click.command()
-@click.option('--sw_user', 'sw_user', envvars='SW_USER',
+@click.argument('fabric_name')
+@click.argument('sw_name')
+@click.argument('sw_role')
+@click.option('--sw_user', 'sw_user', envvar='SW_USER',
               help='switch credentials username'
               )
-@click.option('--sw_pass', 'sw_pass', envvars='SW_PASS',
+@click.option('--sw_pass', 'sw_pass', envvar='SW_PASS',
               help='switch credentials password'
               )
-@click.argument('fabric_name', 
-              help='Fabric on which to add switch'
-              )
-@click.argument('sw_name',
-              help='Switch name to assign the new role'
-              )
-@click.argument('sw_role',
-              help='Switch role to assign to switches'
-              )
+@click.pass_context
 def role(ctx, fabric_name, sw_name, sw_role, sw_user, sw_pass):
     """
     Assign the desired role to the specified switches.
+
+    Usage: switch role FABRIC SWITCH_NAME SWITCH_ROLE
     """
 
-    # Retrieve connection from the context
-    conn = ctx.obj['dcnm_connection']
+    # Create connection session from the context variables
+    conn = session(
+                   ctx.obj['dcnm_host'],
+                   ctx.obj['dcnm_user'],
+                   ctx.obj['dcnm_pass'],
+                   secure=ctx.obj['dcnm_verify']
+                  )
 
     # Set the role of the switches
     results = assign_switch_role(conn, fabric_name, sw_role, sw_name)

@@ -3,7 +3,6 @@
 import sys
 import click
 
-from dcnm_lan_fabric.server import session
 from dcnm_lan_fabric.cli.switch import switch
 
 
@@ -23,12 +22,14 @@ from dcnm_lan_fabric.cli.switch import switch
               )
 @click.pass_context
 def dcnmctl(ctx, dcnm_host, dcnm_user, dcnm_pass, dcnm_verify):
-    # Need to validate DCNM credentials here
-    conn = session(dcnm_host, dcnm_user, dcnm_pass, secure=dcnm_verify)
+    """ A CLI interface to the DCNM API """
 
     ctx.ensure_object(dict)
-    ctx.obj['dcnm_connection'] = conn
 
+    ctx.obj['dcnm_host'] = dcnm_host
+    ctx.obj['dcnm_user'] = dcnm_user
+    ctx.obj['dcnm_pass'] = dcnm_pass
+    ctx.obj['dcnm_verify'] = dcnm_verify
 
 # Bolt on all the sub-commands
 dcnmctl.add_command(switch, name='switch')
