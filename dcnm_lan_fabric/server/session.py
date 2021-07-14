@@ -184,6 +184,6 @@ class session(requests.Session):
 
         if self._api is None:
             if self.version == '11.5(1)':
-                self._api = dcnm_lan.api.v11_5(self)
+                self._api = dcnm_lan_fabric.api.v11_5(self)
 
         return self._api
