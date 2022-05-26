@@ -24,5 +24,7 @@ setuptools.setup(
     install_requires=[
         'requests~=2.25.0',
         'click~=8.0.1',
-    ]
+        'typer~=0.4.1',
+    ],
+    scripts=['bin/dcnmctl.py']
 )

@@ -6,4 +6,3 @@ Adaptation work:
 
 New:
 - Add discovery core method
-- Add delete switch core method
