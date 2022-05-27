@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Copyright (c) 2020 Cisco and/or its affiliates.
+Copyright (c) 2022 Cisco and/or its affiliates.
 
 This software is licensed to you under the terms of the Cisco Sample
 Code License, Version 1.1 (the "License"). You may obtain a copy of the
@@ -19,10 +19,8 @@ or implied.
 __author__ = "Dr Timothy E Miller <timmil@cisco.com>"
 __contributors__ = [
 ]
-__copyright__ = "Copyright (c) 2020 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2022 Cisco and/or its affiliates."
 __license__ = "Cisco Sample Code License, Version 1.1"
-
-import time
 
 import requests
 from urllib3.exceptions import InsecureRequestWarning
@@ -31,14 +29,14 @@ import dcnm_lan_fabric.api
 
 
 class session(requests.Session):
-    def __init__(self, host, user, password, secure=True, lifetime=30):
+    def __init__(self, host, user, password, secure=True, version='12.0'):
         """
         Initialize instance with the following information:
           - host: IP or FQDN of DCNM server
           - user, password: valid DCNM credentials with sufficient privileges
             to perform the desired tasks
           - secure: true if we need to validate the TLS/SSL certificates
-          - lifetime: session lifetime (in seconds) to request for DCNM token
+          - version: DCNM/NDFC version - examples 11.5(1) or 12.0(2f)
         """
 
         requests.Session.__init__(self)
@@ -47,12 +45,14 @@ class session(requests.Session):
         self.__user = user
         self.__password = password
         self.__secure = secure
-        self.__lifetime = lifetime
 
-        self.__url = 'https://{0}/rest'.format(host)
+        self.__version = version
+        self.__base_url = f"https://{host}"
 
-        # When was last authentication and the token returned
-        self.__last = None
+        if self.__version[:2] == "11":
+            self.__url = f"{self.__base_url}/rest"
+        else:
+            self.__url = f"{self.__base_url}/appcenter/cisco/ndfc/api/v1"  # noqa:E501
 
         # Validate SSL or not
         if not self.__secure:
@@ -66,8 +66,8 @@ class session(requests.Session):
             {'Content-Type': 'application/json'}
         )
 
-        # Server DCNM version (exception error if can't connect)
-        self.version = self._check_version()
+        # Are we authenticated to DCNM/NDFC
+        self.__authenticated = False
 
         # Provide caching of the api object, if needed.
         self._api = None
@@ -102,6 +102,12 @@ class session(requests.Session):
         """
         Internal method for this class to fetch DCNM service version
         """
+
+        # Not clear if NDFC actually has a version API any longer
+        if self.__version[:2] == "12":
+            return self.__version
+
+        # Remainder of code is for DCNM 11.x
         url = self.__url + '/dcnm-version'
 
         # Call parent class method because version doesn't require login
@@ -112,52 +118,36 @@ class session(requests.Session):
         if 'Dcnm-Version' not in result:
             raise Exception('Version key not in {0}'.format(result.keys()))
 
-        return result['Dcnm-Version']
-
-    def _token_is_current(self):
-        """
-        Internal method for this class to check if authentication token
-        is still valid.
-        """
-        if self.__last is None:
-            return False
-
-        # If we are within 10 seconds of expiration, re-auth
-        since = time.time() - self.__last - 10
-        if since > (self.__lifetime):
-            return False
-
-        # Token is fresh
-        return True
+        # Update the local value
+        self.__version = result['Dcnm-Version']
+        return self.__version
 
     def logon(self):
         """
-        If there is no valid token, connect to DCNM server to authenticate
+        If there is no valid token, connect to DCNM/NDFC server to authenticate
         using object parameters and process the returned token. This SDK
         stores lifetime in seconds but DCNM requires values in milliseconds.
         """
-        if self._token_is_current():
+
+        if self.__authenticated:
             return
 
-        url = self.__url + '/logon'
-        auth = (self.__user, self.__password)
-        body = {
-            "expirationTime": int(self.__lifetime * 1000),
-        }
+        version = self._check_version()
 
-        # Call parent class method to prevent recursive logon() loop
-        response = requests.Session.post(self, url, json=body, auth=auth)
-        response.raise_for_status()
+        if version[:4] == "11.5":
+            url = self.__base_url + '/rest/logon'
+            return dcnm_lan_fabric.api.dcnm_authenticate(
+                self, url, self.__user, self.__password
+            )
 
-        result = response.json()
-        if 'Dcnm-Token' not in result:
-            raise Exception('Token not returned:' + result.text)
+        if version[:4] == "12.0":
+            url = self.__base_url + '/login'
+            return dcnm_lan_fabric.api.ndfc_authenticate(
+                self, url, self.__user, self.__password
+            )
 
-        # requests.Session behavior is to update the existing entry
-        # so no need to delete the old one.
-        self.headers.update(
-            {'Dcnm-Token': result['Dcnm-Token']}
-        )
+        # Probably should raise an exception here instead
+        return False
 
     def logout(self):
         """
@@ -165,7 +155,12 @@ class session(requests.Session):
         If token exists in this requests.sessions, remove the token
         from the headers.
         """
-        if self._token_is_current():
+
+        # Currently no logout option for NDFC?
+        if self.__version[:2] == "12":
+            return
+
+        if self.__authenticated:
             url = '/logout'
 
             response = self.post(url)
@@ -183,7 +178,9 @@ class session(requests.Session):
         self.logon()
 
         if self._api is None:
-            if self.version == '11.5(1)':
+            if self.__version[:4] == '11.5':
                 self._api = dcnm_lan_fabric.api.v11_5(self)
+            if self.__version[:4] == '12.0':
+                self._api = dcnm_lan_fabric.api.v12_0(self)
 
         return self._api
