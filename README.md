@@ -53,12 +53,15 @@ module directly using setuptools:
 git clone https://github.com/gve-vse-tim/dcnm-lan-fabric
 cd dcnm-lan-fabric
 # Activate your python environment, e.g.  source install.sh
-python setup.py install
+python -m build
+pip install dist/dcnm_lan_fabric-0.?.?-py3-none-any.whl
 ```
 
 ## Documentation
 
-- [DCNM REST API Guide](https://www.cisco.com/c/en/us/td/docs/dcn/dcnm/1151/restapi/cisco-dcnm-rest-api-guide-1151.html)
-- [DevNet DCNM REST API Reference Guide](https://developer.cisco.com/docs/data-center-network-manager/11-5-1/)
-- [REST API Tool](https://www.cisco.com/c/en/us/td/docs/dcn/dcnm/1151/restapi/cisco-dcnm-rest-api-guide-1151.html#task_etx_dhn_xjb)
+- NDFC 12.x REST API Guide (yet to be published)
+
+- [DCNM 11.5 REST API Guide](https://www.cisco.com/c/en/us/td/docs/dcn/dcnm/1151/restapi/cisco-dcnm-rest-api-guide-1151.html)
+- [DevNet DCNM 11.5 REST API Reference Guide](https://developer.cisco.com/docs/data-center-network-manager/11-5-1/)
+- [DCNM 11.5 REST API Tool](https://www.cisco.com/c/en/us/td/docs/dcn/dcnm/1151/restapi/cisco-dcnm-rest-api-guide-1151.html#task_etx_dhn_xjb)
 
