@@ -18,11 +18,13 @@ from dcnm_lan_fabric.actions.core import poap_register_switch
 from dcnm_lan_fabric.actions.core import assign_switch_role
 from dcnm_lan_fabric.actions.core import get_switch_list
 
+
 # Commands for the switch module
 @click.group()
 @click.pass_context
 def switch(ctx):
     pass
+
 
 @click.group()
 @click.pass_context
@@ -37,8 +39,9 @@ def add(ctx):
     dcnmctl [global opts] switch add discover FABRIC SW_MGMT0_IP --sw_user SW_USER --sw_pass SW_PASS
         Note: unlike the GUI, it's not practical to walk the network via CLI.  So this CLI is essentially a
         direct add of a single switch given that switch's mgmt0 IP address.
-    """
+    """  # noqa
     pass
+
 
 @click.command()
 @click.argument('fabric_name', required=False)
@@ -144,6 +147,7 @@ def discover(ctx, fabric_name, sw_ip, sw_user, sw_pass, cfg_erase):
 
     # This functionality not implemented yet
     pass
+
 
 # Set switch role
 @click.command()
