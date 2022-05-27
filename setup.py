@@ -7,10 +7,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dcnm-lan-fabric",
-    version="0.1.2",
+    version="0.1.4",
     author="Tim Miller",
     author_email="timmil@cisco.com",
-    description="Python interface to handle Cisco DCNM API communication",
+    description="Python interface to handle Cisco DCNM/NDFC API communication",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/gve-vse-tim/dcnm-lan-fabric",
