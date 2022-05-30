@@ -72,6 +72,14 @@ class session(requests.Session):
         # Provide caching of the api object, if needed.
         self._api = None
 
+    # Add dunder to print something meaningful about the session
+    def __str__(self):
+        """
+        Print host, user, tls, and connections status
+        """
+
+        return f"ndfc.requests.Session: {self.__user}@{self.__host}, status {self.__authenticated}"  # noqa:E501
+
     # Some light overloading to make the api calls here reflect
     # the API documentation (/logon)
     def get(self, url, **kwargs):

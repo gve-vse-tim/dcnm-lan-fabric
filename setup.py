@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dcnm-lan-fabric",
-    version="0.1.4",
+    version="0.2.0",
     author="Tim Miller",
     author_email="timmil@cisco.com",
     description="Python interface to handle Cisco DCNM/NDFC API communication",
@@ -26,5 +26,8 @@ setuptools.setup(
         'click~=8.0.1',
         'typer~=0.4.1',
     ],
-    scripts=['bin/dcnmctl.py']
+    scripts=[
+        'bin/dcnmctl.py',
+        'bin/ndfcctl.py',
+    ]
 )
