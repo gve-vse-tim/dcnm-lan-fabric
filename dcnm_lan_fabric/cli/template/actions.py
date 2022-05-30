@@ -23,9 +23,11 @@ __copyright__ = "Copyright (c) 2022 Cisco and/or its affiliates."
 __license__ = "Cisco Sample Code License, Version 1.1"
 
 
-from typing import Optional
+from typing import List
+
 import typer
 
+from dcnm_lan_fabric.server import session
 from dcnm_lan_fabric.sdk.template import template
 
 resource = typer.Typer()
@@ -39,40 +41,58 @@ def show(ctx: typer.Context):
 
 @resource.command()
 def list(
-    filter: Optional[str] = typer.Argument(
-        None, help="Template Name Search Filter"
-    ),
-    detail: bool = typer.Option(
-        False, help="Detailed Template View"
-    )
+    ctx: typer.Context,
+    filter: str = typer.Option(None, help="Template Name Search Filter"),
+    detail: bool = typer.Option(False, help="Detailed Template View")
 ):
     """
     List some or all of the templates in NDFC. Without args, list of all
     template names generated. With a filter argument, only the subset of
     template names matching the filter will be returned.
 
-    If detail option set, provide template details.
+    If detail option set, provide template details. (Option is local to CLI and
+    not specific to the API)
     """
 
-    if filter is None:
-        list_of_templates = template.get_all_templates()
-        sorted_list = sorted(list_of_templates, key=lambda tmpl: tmpl['name'])
+    # Grab session from context and login
+    connection: session = ctx.obj['session']
+    connection.logon()
 
-        for tmpl in sorted_list:
-            if detail:
-                print(f"{tmpl['name']:25}: {tmpl['description']}")
-            else:
-                print(f"{tmpl['name']}")
+    # Get the corresponding API for the server
+    api = connection.api()
 
-        return
+    # For "filter by name", we need to add attr to the filter string
+    if filter:
+        filter = f"name={filter}"
 
-    list_of_templates = template.get_template(filter)
-    sorted_list = sorted(list_of_templates, key=lambda tmpl: tmpl['name'])
+    # Fetch list of template objects
+    list_of_templates: List[template.template] = template.get_all_templates(api, filter)  # noqa: E501
 
-    for tmpl in sorted_list:
+    for tmpl in list_of_templates:
         if detail:
-            pass
+            typer.echo(tmpl.summary())
         else:
-            pass
+            typer.echo(tmpl.name)
 
-    return
+
+@resource.command()
+def get(
+    ctx: typer.Context,
+    name: str = typer.Argument(..., help="Exact name of template to fetch"),
+    full: bool = typer.Option(True, help="Populate all template attributes"),
+    verbose: bool = typer.Option(False, help="Dump entire attribute list")
+):
+
+    # Grab session from context and login
+    connection: session = ctx.obj['session']
+    connection.logon()
+
+    # Get the corresponding API for the server
+    api = connection.api()
+
+    tmpl_data = template.get_template(api, name, full)
+
+    if verbose:
+        typer.echo(tmpl_data.verbose())
+    else:
+        typer.echo(tmpl_data.brief())
