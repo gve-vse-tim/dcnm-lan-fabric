@@ -10,6 +10,25 @@ class api(core):
     def __init__(self, conn):
         core.__init__(self, conn)
 
+    # ConfigTemplate - Templates
+    def get_templates(self, filterStr: str = None):
+        if filterStr:
+            query = f"?filterStr={filterStr}"
+        else:
+            query = ""
+
+        url = f"/configtemplate/rest/config/templates{query}"
+        return self.get(url)
+
+    def get_template_by_name(self, name: str, populate: bool = True):
+        if populate:
+            query = "?populate=true"
+        else:
+            query = "?populate=false"
+
+        url = f"/configtemplate/rest/config/templates/{name}{query}"
+        return self.get(url)
+
 
 def authenticate(conn: requests.Session, url, user, password, domain="local"):
     """
