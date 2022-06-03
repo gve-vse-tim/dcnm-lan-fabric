@@ -75,13 +75,21 @@ def list(
             typer.echo(tmpl.name)
 
 
-@resource.command()
+@resource.command(no_args_is_help=True)
 def get(
     ctx: typer.Context,
     name: str = typer.Argument(..., help="Exact name of template to fetch"),
-    full: bool = typer.Option(True, help="Populate all template attributes"),
+    nvpairs: bool = typer.Option(False, help="Simply print the nvpairs"),
+    full: bool = typer.Option(False, help="Populate all template attributes"),
     verbose: bool = typer.Option(False, help="Dump entire attribute list")
 ):
+    """
+    Detailed information about a specific template. Options will adjust the
+    output accordingly:
+      - nvPairs option reduces output to just name, default, required
+      - verbose outputs all the template attributes
+      - full is an API option to populate the metadata attributes
+    """
 
     # Grab session from context and login
     connection: session = ctx.obj['session']
@@ -91,6 +99,29 @@ def get(
     api = connection.api()
 
     tmpl_data = template.get_template(api, name, full)
+
+    if nvpairs:
+        pairs = tmpl_data.nvpairs(verbose)
+        if len(pairs) == 0:
+            typer.echo("No nvPairs found.")
+            return
+
+        for name, default, reqd, description in pairs:
+            req_str = f"{'required' if reqd else 'optional'}"
+            desc_str = f" : {description}" if verbose and description else ''
+
+            # Crop or pad to 80 character string if there is a description
+            if verbose:
+                if len(desc_str) > 79:
+                    desc_str = f"{desc_str[:76]}... "
+                else:
+                    desc_str = f"{desc_str:80}"
+
+            typer.echo(
+                f"({req_str}): {name:35}{desc_str} : {default}"
+            )
+
+        return
 
     if verbose:
         typer.echo(tmpl_data.verbose())

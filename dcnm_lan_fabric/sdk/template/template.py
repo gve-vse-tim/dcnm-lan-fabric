@@ -29,46 +29,49 @@ from typing import List, Any
 
 class template_parameter:
     def __init__(self, param_data):
-        self = param_data  # noqa: F841
+        self.__data = param_data  # noqa: F841
 
-    def __getattribute__(self, __name: str) -> Any:
-        return self.__data.get(__name)
-
-    def __delattr__(self, __name: str) -> None:
-        del self.__data[__name]
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        self.__data[__name] = __value
-
+    @property
     def name(self):
-        return self['name']
+        return self.__data['name']
 
+    @property
     def description(self):
-        return self['description']
+        return self.__data['description']
 
-    def summary(self):
-        return "{0:25}: {1}".format(
-            self.name(), self.description()
-        )
-
+    @property
     def metaproperties(self):
         return self.__data.get('metaProperties', None)
 
+    @property
     def annotations(self):
         return self.__data.get('annotations', None)
 
-    def nvpair(self):
-        meta = self.metaproperties()
-        notes = self.annotations()
+    @property
+    def summary(self):
+        return "{0:25}: {1}".format(
+            self.name, self.description
+        )
 
-        required = notes.get('IsMandatory', False)
+    def __str__(self):
+        return f"dcnm/ndfc.template.nvpair {self.name}"
 
-        if not meta:
-            return (self['name'], None, required)
+    def nvpair(self, verbose=False):
+        meta = self.metaproperties
+        notes = self.annotations
+
+        if notes:
+            required = notes.get('IsMandatory', "false")
+            description = notes.get('Description', "")
+        else:
+            required = "false"
+            description = ""
 
         return (
             self.name,
-            meta.get('defaultValue', None, required)
+            meta.get('defaultValue', "") if meta else "",
+            True if required.lower() == "true" else False,
+            description if verbose else None
         )
 
 
@@ -109,11 +112,13 @@ class template:
     def verbose(self):
         return json.dumps(self.__data, indent=4)
 
-    def nvpairs(self):
+    def nvpairs(self, verbose=False):
         pairs = list()
+
         for attr in self.parameters:
-            pairs.append(attr.nvpair())
-        pass
+            pairs.append(attr.nvpair(verbose))
+
+        return sorted(pairs, key=lambda idx: idx[0])
 
 
 def get_all_templates(api, filter):
